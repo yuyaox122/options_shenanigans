@@ -43,7 +43,7 @@ def plot_black_scholes_surface(prices, volatilities, maturities):
                                 yaxis_title='Maturity (Years)',
                                 zaxis_title='Call Option Price'),
                     width=800, height=600)
-    volatility_surface_fig.show()
+    # volatility_surface_fig.show()
 
 maturities = np.linspace(0.01, 1, 100)
 volatilities = np.linspace(0.01, 1, 100)
@@ -65,7 +65,7 @@ def plot_options_data(symbol):
                       xaxis_title='Strike Price',
                         yaxis_title='Last Price',
                         width=800, height=600)
-    plot_plt.show()
+    # plot_plt.show()
 
 plot_options_data('AAPL')
 
