@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Lasso
+import streamlit as st
 
 def black_scholes_price(S, K, r, T, sigma):
     d1 = (np.log(S/K)+(r+sigma**2/2)*T)/(sigma*np.sqrt(T))
@@ -82,8 +83,10 @@ nnet_fit = nnet_pipeline.fit(
   train_data.get("observed_price")
 )
 
+print("Neural network model fitted.")
+
 rf_model = RandomForestRegressor(
-  n_estimators=50, 
+  n_estimators=20, 
   min_samples_leaf=2000, 
   random_state=random_state
 )
@@ -98,37 +101,39 @@ rf_fit = rf_pipeline.fit(
   train_data.get("observed_price")
 )
 
-deepnnet_model = MLPRegressor(
-  hidden_layer_sizes=(10, 10, 10),
-  activation="logistic", 
-  solver="lbfgs",
-  max_iter=max_iter, 
-  random_state=random_state
-)
+print("Random forest model fitted.")
+
+# deepnnet_model = MLPRegressor(
+#   hidden_layer_sizes=(10, 10, 10),
+#   activation="logistic", 
+#   solver="lbfgs",
+#   max_iter=max_iter, 
+#   random_state=random_state
+# )
                               
-deepnnet_pipeline = Pipeline([
-  ("preprocessor", preprocessor),
-  ("regressor", deepnnet_model)
-])
+# deepnnet_pipeline = Pipeline([
+#   ("preprocessor", preprocessor),
+#   ("regressor", deepnnet_model)
+# ])
 
-deepnnet_fit = deepnnet_pipeline.fit(
-  train_data.drop(columns=["observed_price"]),
-  train_data.get("observed_price")
-)
+# deepnnet_fit = deepnnet_pipeline.fit(
+#   train_data.drop(columns=["observed_price"]),
+#   train_data.get("observed_price")
+# )
 
-# Polynomial regression with Lasso regularisation
-lm_pipeline = Pipeline([
-  ("polynomial", PolynomialFeatures(degree=5, 
-                                    interaction_only=False, 
-                                    include_bias=True)),
-  ("scaler", StandardScaler()),
-  ("regressor", Lasso(alpha=0.01))
-])
+# # Polynomial regression with Lasso regularisation
+# lm_pipeline = Pipeline([
+#   ("polynomial", PolynomialFeatures(degree=5, 
+#                                     interaction_only=False, 
+#                                     include_bias=True)),
+#   ("scaler", StandardScaler()),
+#   ("regressor", Lasso(alpha=0.01))
+# ])
 
-lm_fit = lm_pipeline.fit(
-  train_data.get(["S", "K", "r", "T", "sigma"]),
-  train_data.get("observed_price")
-)
+# lm_fit = lm_pipeline.fit(
+#   train_data.get(["S", "K", "r", "T", "sigma"]),
+#   train_data.get("observed_price")
+# )
 
 test_X = test_data.get(["S", "K", "r", "T", "sigma"])
 test_y = test_data.get("observed_price")
@@ -137,8 +142,9 @@ predictive_performance = (pd.concat(
     [test_data.reset_index(drop=True), 
      pd.DataFrame({"Random forest": rf_fit.predict(test_X),
                    "Single layer": nnet_fit.predict(test_X),
-                   "Deep NN": deepnnet_fit.predict(test_X),
-                   "Lasso": lm_fit.predict(test_X)})
+                  #  "Deep NN": deepnnet_fit.predict(test_X),
+                  #  "Lasso": lm_fit.predict(test_X)
+                  })
     ], axis=1)
   .melt(
     id_vars=["S", "K", "r", "T", "sigma",
@@ -156,9 +162,6 @@ fig = px.scatter(
     predictive_performance,
     x="moneyness",
     y="pricing_error",
-    color="Model",
-    facet_col="Model",
-    trendline="ols",
     title="Pricing Error vs Moneyness by Model"
 )
 fig.update_layout(
@@ -167,4 +170,6 @@ fig.update_layout(
     legend_title="Model"
 )
 
-fig.show()
+st.title("Machine Learning Models for Option Pricing")
+st.sidebar.header("Model Settings")
+st.plotly_chart(fig, use_container_width=True)
